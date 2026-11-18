@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Руны</title>
+<meta name="description" content="Руны Старшего Футарка — вытянуть одну, три или сколько нужно.">
+<meta name="theme-color" content="#3b3c3f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Руны">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+<header class="bar">
+  <button id="btn-menu" class="bar-btn" aria-label="Меню">
+    <svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+  </button>
+  <h1 id="title" class="bar-title">Руны</h1>
+  <button id="btn-spreads" class="bar-text">Расклады</button>
+</header>
+
+<main class="stage">
+  <div id="table" class="table" aria-live="polite"></div>
+  <p id="hint" class="hint" hidden></p>
+</main>
+
+<div class="fabs">
+  <button id="fab-info" class="fab fab-info" aria-label="Руны расклада">
+    <svg viewBox="0 0 24 24"><circle class="dot" cx="12" cy="6.5" r="1.6"/><path d="M12 10.5v8"/></svg>
+  </button>
+  <button id="fab-clear" class="fab fab-small" aria-label="Убрать все руны" hidden>
+    <svg viewBox="0 0 24 24"><path d="M7 7l10 10M17 7 7 17"/></svg>
+  </button>
+  <button id="fab-main" class="fab fab-main"></button>
+</div>
+
+<!-- Всплывающее меню раскладов -->
+<div id="menu" class="menu" hidden></div>
+
+<!-- Боковое меню -->
+<div id="drawer" class="drawer" hidden>
+  <div class="scrim" data-close></div>
+  <nav class="drawer-panel" aria-label="Меню">
+    <div class="drawer-head">Руны</div>
+    <div id="drawer-list"></div>
+  </nav>
+</div>
+
+<!-- Страница раздела -->
+<section id="page" class="page" hidden>
+  <header class="bar">
+    <button id="page-back" class="bar-btn" aria-label="Назад">
+      <svg viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
+    </button>
+    <h2 id="page-title" class="bar-title"></h2>
+  </header>
+  <div id="page-body" class="page-body"></div>
+</section>
+
+<!-- Нижний лист -->
+<div id="sheet" class="sheet" hidden>
+  <div class="scrim" data-close></div>
+  <div class="sheet-card" role="dialog" aria-modal="true">
+    <div class="sheet-grip" data-close></div>
+    <div id="sheet-body" class="sheet-body"></div>
+  </div>
+</div>
+
+<div id="toast" class="toast" hidden></div>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
