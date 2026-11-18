@@ -1,8 +1,5 @@
-// Общее для всего приложения: данные рун, хранилище, случай, отрисовка диска.
-import { RUNES, BLANK_RUNE } from './data/runes.js';
-
-export const ALL_RUNES = [...RUNES, BLANK_RUNE];
-export const BY_ID = Object.fromEntries(ALL_RUNES.map(r => [r.id, r]));
+// Общее для всего приложения: хранилище, настройки, случай, отрисовка диска и карты.
+// Колоды — в decks.js; функции отрисовки получают колоду аргументом.
 
 export const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
@@ -25,49 +22,62 @@ export function randInt(n) {
   return x % n;
 }
 
-/** Тянет руну из пула (пул изменяется). */
-export function drawFrom(pool) {
+/** Тянет из пула (пул изменяется). */
+export function drawFrom(deck, pool) {
   const id = pool.splice(randInt(pool.length), 1)[0];
-  return { id, reversed: settings.reversed && canReverse(BY_ID[id]) && randInt(2) === 1 };
+  return { id, reversed: settings.reversed && deck.canReverse(deck.byId[id]) && randInt(2) === 1 };
 }
-export function fullPool(exclude = []) {
+/** Всё, что можно вытянуть, кроме уже лежащего на столе. */
+export function fullPool(deck, exclude = []) {
   const out = new Set(exclude);
-  const ids = RUNES.map(r => r.id).filter(id => !out.has(id));
-  if (settings.blank && !out.has(BLANK_RUNE.id)) ids.push(BLANK_RUNE.id);
-  return ids;
+  return deck.pool().filter(id => !out.has(id));
 }
 
-export const canReverse = r => r.rev !== false && !!r.down;
 export const haptic = p => { if (settings.haptics && navigator.vibrate) try { navigator.vibrate(p); } catch { } };
 
-// ── Диск ──
-export function glyphSVG(r) {
-  return `<svg viewBox="0 0 60 100" aria-hidden="true">${r.path ? `<path d="${r.path}"/>` : ''}</svg>`;
+// ── Диск и карта ──
+const isRev = (deck, item) => !!item.reversed && deck.canReverse(deck.byId[item.id]);
+
+function faceHTML(deck, x) {
+  if (deck.kind === 'card') return `<img src="${deck.img(x)}" alt="" decoding="async" draggable="false">`;
+  return `<svg viewBox="0 0 60 100" aria-hidden="true">${x.path ? `<path d="${x.path}"/>` : ''}</svg>`;
 }
 
-/** Овальный диск с руной. item = { id, reversed } */
-export function discHTML(item, { idx = null, name = true, cls = '' } = {}) {
-  const r = BY_ID[item.id], rev = item.reversed && canReverse(r);
-  return `<div class="disc${rev ? ' reversed' : ''}${cls ? ' ' + cls : ''}"${idx != null ? ` data-i="${idx}"` : ''} role="button" tabindex="0" aria-label="${esc(r.name)}${rev ? ', перевёрнута' : ''}">
-    <div class="disc-face">${glyphSVG(r)}</div>
-    ${name ? `<div class="disc-name">${esc(r.name)}${rev ? '<small>перевёрнута</small>' : ''}</div>` : ''}
+/** Руна или карта. item = { id, reversed } */
+export function pieceHTML(deck, item, { idx = null, name = true, cls = '' } = {}) {
+  const x = deck.byId[item.id], rev = isRev(deck, item);
+  const c = ['disc', deck.kind === 'card' && 'card', rev && 'reversed', cls].filter(Boolean).join(' ');
+  return `<div class="${c}"${idx != null ? ` data-i="${idx}" role="button" tabindex="0"` : ''} aria-label="${esc(x.name)}${rev ? ', перевёрнута' : ''}">
+    <div class="disc-face">${faceHTML(deck, x)}</div>
+    ${name ? `<div class="disc-name">${esc(x.name)}${rev ? '<small>перевёрнута</small>' : ''}</div>` : ''}
   </div>`;
 }
 
-/** Строка руны для листа «i», истории и справочника. */
-export function runeRowHTML(item, { num = null, reference = false } = {}) {
-  const r = BY_ID[item.id], rev = item.reversed && canReverse(r);
+/** Строка для листа «i», истории и справочника. */
+export function rowHTML(deck, item, { num = null, reference = false } = {}) {
+  const x = deck.byId[item.id], rev = isRev(deck, item);
   let text = '';
-  if (settings.meanings) {
-    text = `<p class="row-text">${esc(rev ? r.down : r.up)}</p>`;
-    if (reference && canReverse(r)) text += `<p class="row-text muted">Перевёрнутая: ${esc(r.down)}</p>`;
-  }
-  return `<div class="rune-row">
-    ${discHTML(item, { name: false, cls: 'mini' })}
+  const m = deck.meaning(x, rev);
+  if (m) text = `<p class="row-text">${esc(m)}</p>`;
+  const ref = reference && deck.reference(x);
+  if (ref) text += `<p class="row-text muted">${esc(ref)}</p>`;
+  return `<div class="rune-row${deck.kind === 'card' ? ' card-row' : ''}">
+    ${pieceHTML(deck, item, { name: false, cls: 'mini' })}
     <div class="row-body">
-      <div class="row-title">${num != null ? `<span class="row-num">${num}</span>` : ''}${esc(r.name)}${rev ? '<small>перевёрнута</small>' : ''}</div>
-      <div class="row-sub">${esc(r.latin)} · «${esc(r.gloss)}»${r.sound !== '—' ? ` · звук ${esc(r.sound)}` : ''}</div>
+      <div class="row-title">${num != null ? `<span class="row-num">${num}</span>` : ''}${esc(x.name)}${rev ? '<small>перевёрнута</small>' : ''}</div>
+      <div class="row-sub">${esc(deck.sub(x))}</div>
       ${text}
     </div>
+  </div>`;
+}
+
+/** Одна руна или карта крупно — по нажатию. Карту показываем большой картинкой. */
+export function detailHTML(deck, item, { num = null, reference = false } = {}) {
+  if (deck.kind !== 'card') return rowHTML(deck, item, { num, reference });
+  const x = deck.byId[item.id], rev = isRev(deck, item);
+  return `<div class="detail">
+    ${pieceHTML(deck, item, { name: false, cls: 'big' })}
+    <div class="row-title">${num != null ? `<span class="row-num">${num}</span>` : ''}${esc(x.name)}${rev ? '<small>перевёрнута</small>' : ''}</div>
+    <div class="row-sub">${esc(deck.sub(x))}</div>
   </div>`;
 }

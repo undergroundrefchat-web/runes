@@ -95,6 +95,24 @@ svg { display: block; }
 .disc.tiny .disc-face { box-shadow: 0 2px 4px rgba(0, 0, 0, .2); }
 .disc.tiny .disc-face path { stroke-width: 8; }
 
+/* ── Карта таро: та же раскладка, что у диска, но прямоугольная с картинкой ── */
+.disc.card .disc-face {
+  aspect-ratio: 300 / 520; border-radius: 6% / 3.5%; overflow: hidden;
+  background: #d8d2c4; box-shadow: 0 12px 24px rgba(0, 0, 0, .26), 0 2px 5px rgba(0, 0, 0, .2);
+}
+.disc.card .disc-face img { width: 100%; height: 100%; object-fit: cover; display: block; -webkit-user-drag: none; }
+.disc.card.reversed .disc-face img { transform: rotate(180deg); }
+.disc.card.empty .disc-face { background: none; }
+.disc.card.mini .disc-face, .disc.card.tiny .disc-face { border-radius: 8% / 4.6%; }
+.disc.big { --dw: min(64vw, 300px, calc((82vh - 170px) * .577)); gap: 0; }
+.detail { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 4px; padding: 4px 0 6px; }
+.detail .disc.big { margin-bottom: 14px; }
+.detail .row-title { justify-content: center; }
+.card-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px 10px; }
+.card-grid .disc-name { hyphens: auto; -webkit-hyphens: auto; }
+.card-grid .cell .disc { --dw: 100%; max-width: 92px; gap: 8px; }
+.card-grid .cell .disc-name { font-size: 12px; }
+
 /* ── Плавающие кнопки ── */
 .fabs {
   position: fixed; z-index: 20; right: calc(18px + var(--safe-r)); bottom: calc(22px + var(--safe-b));
